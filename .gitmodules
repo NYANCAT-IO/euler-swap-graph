@@ -1,0 +1,3 @@
+[submodule "eulerswap-contracts"]
+	path = eulerswap-contracts
+	url = https://github.com/euler-xyz/euler-swap.git

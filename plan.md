@@ -43,37 +43,58 @@ npm install
 ### 1.2 Project Configuration
 - Configure for Ethereum mainnet
 - Set start block to June 2024 EulerSwap deployment
-- Add provided contract addresses from `deployment-addresses.json`
+- Use latest contract addresses from `eulerswap-contracts/README.md`
 
 ## Phase 2: Contract Integration (1 hour)
 
-### 2.1 ABI Integration
-Use provided interfaces in `contracts/interfaces/`:
-- `IEulerSwap.sol` - Core pool contract
-- `IEulerSwapFactory.sol` - Factory for pool deployment
-- `IEulerSwapPeriphery.sol` - User-facing helper functions
+### 2.1 Repository Access & Latest Deployment Info
+**Source Repository Submodule**: `eulerswap-contracts/` (complete euler-xyz/euler-swap repository)
 
-### 2.2 Event Identification
-Key events to track (infer from contract functions):
+**Key Resources Available**:
+- **Latest deployment addresses**: `eulerswap-contracts/README.md` (Mainnet section)
+- **Contract interfaces**: `eulerswap-contracts/src/interfaces/`
+- **Event definitions**: `eulerswap-contracts/src/Events.sol`
+- **Complete implementations**: `eulerswap-contracts/src/`
+- **Compiled ABIs**: `eulerswap-contracts/out/` (Foundry artifacts)
+- **Documentation**: `eulerswap-contracts/docs/`
 
-**Factory Events**:
+### 2.2 Latest Mainnet Deployment Addresses (from submodule README)
+**Uniswap4 Hook Compatible** (Primary):
+- **Factory**: `0xFb9FE66472917F0F8966506A3bf831Ac0c10caD4`
+- **Periphery**: `0x52b26d9046BEc495914FaE467Ff0e95762C5ed74`
+- **Implementation**: `0xF5d35536482f62c9031b4d6bD34724671BCE33d1`
+
+**OG Interface Only** (Alternative):
+- **Factory**: `0x806AF31A325bE46812Fc8E8391333c4fA74B1211`
+- **Periphery**: `0xbAA3acceE85a34cAB03a587cD9b3A3728EC89E3A`
+- **Implementation**: `0x05D6C4D46A794468f282469c0E9346f121EA92Ee`
+
+### 2.3 Event Definitions (from eulerswap-contracts/src/Events.sol)
+**Actual Events from Source Code**:
+
 ```solidity
-event PoolDeployed(address indexed pool, address indexed asset0, address indexed asset1, ...);
-event PoolUninstalled(address indexed pool);
+/// Emitted upon EulerSwap instance creation
+event EulerSwapActivated(address indexed asset0, address indexed asset1);
+
+/// Emitted after every swap with complete data
+event Swap(
+    address indexed sender,
+    uint256 amount0In,
+    uint256 amount1In,
+    uint256 amount0Out,
+    uint256 amount1Out,
+    uint112 reserve0,
+    uint112 reserve1,
+    address indexed to
+);
 ```
 
-**Pool Events**:
-```solidity
-event Swap(address indexed sender, uint amount0In, uint amount1In, uint amount0Out, uint amount1Out, address indexed to);
-event Sync(uint112 reserve0, uint112 reserve1);
-```
-
-**Integration Events** (from Euler vaults):
-- Borrow/Repay events
+**Additional Events** (from Euler vaults integration):
+- Borrow/Repay events from vault contracts
 - Collateral state changes
-- Utilization updates
+- Utilization rate updates
 
-### 2.3 Contract Configuration
+### 2.4 Contract Configuration
 ```yaml
 # subgraph.yaml
 dataSources:
@@ -81,9 +102,17 @@ dataSources:
     name: EulerSwapFactory
     network: mainnet
     source:
-      address: "0xb013be1D0D380C13B58e889f412895970A2Cf228"
+      address: "0xFb9FE66472917F0F8966506A3bf831Ac0c10caD4"  # Hook Compatible Factory
       abi: EulerSwapFactory
       startBlock: [JUNE_2024_BLOCK]
+```
+
+**ABI Extraction**:
+```bash
+# Extract ABI from compiled artifacts
+cat eulerswap-contracts/out/EulerSwapFactory.sol/EulerSwapFactory.json | jq '.abi' > abis/EulerSwapFactory.json
+cat eulerswap-contracts/out/EulerSwap.sol/EulerSwap.json | jq '.abi' > abis/EulerSwap.json
+cat eulerswap-contracts/out/EulerSwapPeriphery.sol/EulerSwapPeriphery.json | jq '.abi' > abis/EulerSwapPeriphery.json
 ```
 
 ## Phase 3: GraphQL Schema Design (45 minutes)
@@ -506,8 +535,14 @@ Enhance `../euler-delta-neutral/src/strategy/delta_neutral.py` to use real liqui
 
 ## Available Resources
 
-- **Contract Interfaces**: Complete Solidity interfaces in `contracts/interfaces/`
-- **Deployment Addresses**: All network deployments in `deployment-addresses.json`
+- **Complete EulerSwap Repository**: Git submodule in `eulerswap-contracts/`
+  - **Latest deployment addresses**: `eulerswap-contracts/README.md`
+  - **Contract source code**: `eulerswap-contracts/src/`
+  - **Contract interfaces**: `eulerswap-contracts/src/interfaces/`
+  - **Event definitions**: `eulerswap-contracts/src/Events.sol`
+  - **Compiled ABIs**: `eulerswap-contracts/out/`
+  - **Documentation**: `eulerswap-contracts/docs/`
+  - **Test suite**: `eulerswap-contracts/test/`
 - **Research Context**: Comprehensive background in `research-context.md`
 - **Parent Project**: Reference implementation in `../euler-delta-neutral/`
 
